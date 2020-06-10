@@ -7,6 +7,7 @@ const router = express.Router();
 const {
   getCompanies,
   getCompany,
+  getMyCompany,
   updateCompany,
   addCompany,
   deleteCompany,
@@ -17,6 +18,8 @@ const {
 } = require("../controllers/company_controllers");
 
 router.route("/").get(getCompanies).post(authorize, addCompany);
+
+router.route("/my-company").get(authorize, getMyCompany);
 
 router
   .route("/:id")

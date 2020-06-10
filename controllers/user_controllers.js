@@ -50,6 +50,39 @@ exports.getUser = asyncHandler(async (req, res, next) => {
   }
 });
 
+// @route     GET /api/users/email
+// @desc      Get user by email
+// @access    Private
+exports.getUserByEmail = asyncHandler(async (req, res, next) => {
+  try {
+    console.log(req.body.email);
+    const users = await User.find({ email: { $regex: req.body.email } });
+    users
+      ? jsonResponse(
+          res,
+          200,
+          true,
+          `Got user by email: ${req.body.email} successfully`,
+          users
+        )
+      : jsonResponse(
+          res,
+          404,
+          false,
+          `Could not find user by email: ${req.body.email}`,
+          user
+        );
+  } catch (error) {
+    jsonResponse(
+      res,
+      400,
+      false,
+      `Failed to get user by email: ${req.body.email}`,
+      error
+    );
+  }
+});
+
 // @route     POST /api/users/
 // @desc      Add a user
 // @access    Private
@@ -67,12 +100,12 @@ exports.addUser = asyncHandler(async (req, res, next) => {
 // @desc      Register user
 // @access    Public
 exports.registerUser = asyncHandler(async (req, res, next) => {
-  const { name, email, password } = req.body;
+  const { userName, email, password } = req.body;
 
   // Create user
   try {
     const user = await User.create({
-      name,
+      userName,
       email,
       password,
       company: null,
@@ -80,6 +113,7 @@ exports.registerUser = asyncHandler(async (req, res, next) => {
 
     tokenResponse(res, user, 201, true, "User registered successfully");
   } catch (error) {
+    console.log(error);
     jsonResponse(res, 400, false, "Failed to register user", error);
   }
 });

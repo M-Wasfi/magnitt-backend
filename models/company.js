@@ -37,19 +37,19 @@ const CompanySchema = Schema({
   companyConnections: [
     {
       type: Schema.Types.ObjectID,
-      ref: "jobs",
+      ref: "companies",
     },
   ],
   sentConnections: [
     {
       type: Schema.Types.ObjectID,
-      ref: "jobs",
+      ref: "companies",
     },
   ],
   pendingConnections: [
     {
       type: Schema.Types.ObjectID,
-      ref: "jobs",
+      ref: "companies",
     },
   ],
   creationDate: {
