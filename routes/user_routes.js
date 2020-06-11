@@ -1,5 +1,7 @@
 const express = require("express");
 
+const { authorize } = require("../helpers/authorization");
+
 const router = express.Router();
 
 const {
@@ -13,11 +15,15 @@ const {
   registerUser,
 } = require("../controllers/user_controllers");
 
-router.route("/").get(getUsers).post(addUser);
+router.route("/").get(getUsers).post(authorize, addUser);
 
 router.route("/email").post(getUserByEmail);
 
-router.route("/:id").get(getUser).put(updateUser).delete(deleteUser);
+router
+  .route("/:id")
+  .get(getUser)
+  .put(authorize, updateUser)
+  .delete(authorize, deleteUser);
 
 router.route("/login").post(loginUser);
 

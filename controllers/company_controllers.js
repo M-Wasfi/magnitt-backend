@@ -183,6 +183,8 @@ exports.deleteCompany = asyncHandler(async (req, res, next) => {
 exports.addEmployee = asyncHandler(async (req, res, next) => {
   //Check ownership
   const company = await Company.findOne({ owner: req.user.id });
+  console.log("2");
+  console.log(company);
 
   if (company === null) {
     return next(
@@ -199,8 +201,10 @@ exports.addEmployee = asyncHandler(async (req, res, next) => {
   const employeeInCompany = company.employees.some(function (employee) {
     return employee.equals(req.body.employee);
   });
+  console.log("2");
+  console.log(employeeInCompany);
 
-  if (employeeInCompany !== null) {
+  if (employeeInCompany) {
     return jsonResponse(
       res,
       400,
@@ -211,6 +215,9 @@ exports.addEmployee = asyncHandler(async (req, res, next) => {
   }
 
   const employee = await User.findById(req.body.employee);
+
+  console.log("3");
+  console.log(employee);
 
   if (employee.company !== null) {
     return jsonResponse(

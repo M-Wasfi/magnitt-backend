@@ -10,7 +10,7 @@ const User = require("../models/user");
 // @access  Private
 exports.getUsers = asyncHandler(async (req, res, next) => {
   try {
-    const users = await User.find();
+    const users = await User.find().populate("company", "companyName");
 
     jsonResponse(res, 200, true, "Got all users successfully", users);
   } catch (error) {
@@ -23,7 +23,7 @@ exports.getUsers = asyncHandler(async (req, res, next) => {
 // @access    Private
 exports.getUser = asyncHandler(async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).populate("company");
     user
       ? jsonResponse(
           res,
@@ -55,8 +55,10 @@ exports.getUser = asyncHandler(async (req, res, next) => {
 // @access    Private
 exports.getUserByEmail = asyncHandler(async (req, res, next) => {
   try {
-    console.log(req.body.email);
-    const users = await User.find({ email: { $regex: req.body.email } });
+    const users = await User.find({
+      email: { $regex: req.body.email },
+    }).populate("company", "companyName");
+
     users
       ? jsonResponse(
           res,

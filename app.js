@@ -24,6 +24,8 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
+// app.disable("etag");
+
 app.use("/api/users", userRoutes);
 app.use("/api/companies", companyRoutes);
 
