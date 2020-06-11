@@ -130,14 +130,14 @@ exports.loginUser = asyncHandler(async (req, res, next) => {
     );
 
     if (!user) {
-      return next(jsonResponse(res, 400, false, "Invalid email", {}));
+      return next(jsonResponse(res, 400, false, "Invalid credentials", {}));
     }
 
     //Check if password matches
     const passwordMatch = await user.matchPassword(req.body.password);
 
     if (!passwordMatch) {
-      return next(jsonResponse(res, 400, false, "Invalid password", {}));
+      return next(jsonResponse(res, 400, false, "Invalid credentials", {}));
     }
 
     tokenResponse(res, user, 200, "User logged in successfully");
