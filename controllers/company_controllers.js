@@ -26,7 +26,9 @@ exports.getCompanies = asyncHandler(async (req, res, next) => {
 // @access    Private
 exports.getCompany = asyncHandler(async (req, res, next) => {
   try {
-    const company = await Company.findById(req.params.id).populate("employees");
+    const company = await Company.findById(req.params.id)
+      .populate("employees")
+      .populate("companyConnections");
 
     company
       ? jsonResponse(
@@ -281,11 +283,12 @@ exports.sendConnectionRequest = asyncHandler(async (req, res, next) => {
     );
   }
 
-  const oldRequest = company.sentConnections.some(function (com) {
-    return com.equals(req.body.company);
+  const oldConnection = Connection.find({
+    sender: company._id,
+    receiver: req.bode.company,
   });
 
-  if (oldRequest) {
+  if (oldConnection) {
     return next(
       jsonResponse(res, 400, false, `Request has already been sent`, {})
     );
@@ -299,7 +302,6 @@ exports.sendConnectionRequest = asyncHandler(async (req, res, next) => {
 
   const otherCompany = await Company.findById(req.body.company);
 
-  company.sentConnections.push(req.body.company);
   otherCompany.pendingConnections.push(company._id);
 
   await company.save();
@@ -402,9 +404,11 @@ exports.getCompanyConnections = asyncHandler(async (req, res, next) => {
   try {
     const company = await Company.findOne({ owner: req.user.id });
 
-    const connections = await Connection.find(
-      { sender: company._id } || { receiver: company._id }
-    );
+    const connections = await Connection.find({
+      $or: [{ sender: company._id }, { receiver: company._id }],
+    });
+
+    console.log(connections);
 
     connections
       ? jsonResponse(

@@ -29,7 +29,7 @@ router
 
 router.route("/my-company").get(authorize, getMyCompany);
 
-router.route("/my-connections").post(authorize, getCompanyConnections);
+router.route("/my-connections").get(authorize, getCompanyConnections);
 
 router
   .route("/:id")
