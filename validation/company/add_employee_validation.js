@@ -1,11 +1,9 @@
 const validator = require("../../helpers/validation");
 const jsonResponse = require("../../helpers/json_response");
 
-const addUserValidation = (req, res, next) => {
+const addEmployeeValidation = (req, res, next) => {
   const validationRule = {
-    userName: "required|string",
-    password: "required|string|min:8|confirmed",
-    email: "required|email",
+    employee: "required|string",
   };
 
   validator(req.body, validationRule, {}, (err, status) => {
@@ -17,4 +15,4 @@ const addUserValidation = (req, res, next) => {
   });
 };
 
-module.exports = addUserValidation;
+module.exports = addEmployeeValidation;

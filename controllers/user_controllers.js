@@ -104,6 +104,23 @@ exports.addUser = asyncHandler(async (req, res, next) => {
 exports.registerUser = asyncHandler(async (req, res, next) => {
   const { userName, email, password } = req.body;
 
+  const userWithName = await User.findOne({ userName });
+  const userWithEmail = await User.findOne({ email });
+
+  if (userWithEmail || userWithName) {
+    let errors = {};
+
+    if (userWithName) {
+      errors.userName = "Username has already been used";
+    }
+
+    if (userWithEmail) {
+      errors.email = "Email has already been used";
+    }
+
+    return jsonResponse(res, 409, false, "Failed to register user", { errors });
+  }
+
   // Create user
   try {
     const user = await User.create({
@@ -115,8 +132,7 @@ exports.registerUser = asyncHandler(async (req, res, next) => {
 
     tokenResponse(res, user, 201, true, "User registered successfully");
   } catch (error) {
-    console.log(error);
-    jsonResponse(res, 400, false, "Failed to register user", error);
+    jsonResponse(res, 400, false, "Failed to register user", { error });
   }
 });
 
@@ -148,7 +164,7 @@ exports.loginUser = asyncHandler(async (req, res, next) => {
 
 // @route     PUT /api/users/:id
 // @desc      Update user
-// @access    Private
+// @access    Private/Admin
 exports.updateUser = asyncHandler(async (req, res, next) => {
   try {
     const user = await User.findByIdAndUpdate(req.params.id, req.body, {
@@ -168,6 +184,60 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
         );
   } catch (error) {
     jsonResponse(res, 400, false, "Failed to update user", error);
+  }
+});
+
+// @route     PUT /api/users/updateProfile
+// @desc      Update user profile
+// @access    Private
+exports.updateUserProfile = asyncHandler(async (req, res, next) => {
+  const { userName, email } = req.body;
+
+  const currentUser = await User.findById(req.user.id);
+  const userWithName = await User.findOne({ userName });
+  const userWithEmail = await User.findOne({ email });
+
+  const nameExist = userWithName && currentUser.userName !== userName;
+  const emailExist = userWithEmail && currentUser.email !== email;
+
+  var errors = {};
+
+  if (nameExist) {
+    errors.userName = "Username has already been used";
+  }
+
+  if (emailExist) {
+    errors.email = "Email has already been used";
+  }
+
+  if (nameExist || emailExist) {
+    return jsonResponse(res, 409, false, "Failed to update user profile", {
+      errors,
+    });
+  }
+
+  try {
+    // currentUser.userName = userName;
+    // currentUser.email = email;
+    // currentUser.save();
+
+    const user = await User.findByIdAndUpdate(req.user.id, req.body, {
+      new: true,
+      runValidators: true,
+      context: "query",
+    }).populate("company");
+
+    user
+      ? jsonResponse(res, 200, true, "User profile updated successfully", user)
+      : jsonResponse(
+          res,
+          404,
+          false,
+          `Could not find user profile by id: ${req.user.id}`,
+          {}
+        );
+  } catch (error) {
+    jsonResponse(res, 400, false, "Failed to update user profile", { error });
   }
 });
 

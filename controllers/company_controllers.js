@@ -2,10 +2,10 @@ const mongoose = require("mongoose");
 
 const asyncHandler = require("../helpers/async_handler");
 const jsonResponse = require("../helpers/json_response");
-const tokenResponse = require("../helpers/token_response");
 
 const Company = require("../models/company");
 const User = require("../models/user");
+const Connection = require("../models/connection");
 
 //TODO review access
 // @route   GET api/companies
@@ -140,6 +140,32 @@ exports.updateCompany = asyncHandler(async (req, res, next) => {
         )
       );
     }
+
+    const { companyName } = req.body;
+
+    const currentUser = await User.findById(req.user.id);
+    const companyWithName = await Company.findOne({ companyName });
+
+    if (companyWithName) {
+      const nameExist = !currentUser.company.equals(companyWithName._id);
+
+      let errors = {};
+
+      if (nameExist) {
+        errors.companyName = "Company name has already been used";
+
+        return jsonResponse(
+          res,
+          409,
+          false,
+          "Failed to update company profile",
+          {
+            errors,
+          }
+        );
+      }
+    }
+
     const company = await Company.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
@@ -153,10 +179,10 @@ exports.updateCompany = asyncHandler(async (req, res, next) => {
           404,
           false,
           `Could not find company by id: ${req.params.id}`,
-          company
+          {}
         );
   } catch (error) {
-    jsonResponse(res, 400, false, "Failed to update company", error);
+    jsonResponse(res, 400, false, "Failed to update company", { error });
   }
 });
 
@@ -183,8 +209,6 @@ exports.deleteCompany = asyncHandler(async (req, res, next) => {
 exports.addEmployee = asyncHandler(async (req, res, next) => {
   //Check ownership
   const company = await Company.findOne({ owner: req.user.id });
-  console.log("2");
-  console.log(company);
 
   if (company === null) {
     return next(
@@ -272,6 +296,12 @@ exports.sendConnectionRequest = asyncHandler(async (req, res, next) => {
     );
   }
 
+  await Connection.create({
+    sender: company._id,
+    receiver: req.body.company,
+    status: "PENDING",
+  });
+
   const otherCompany = await Company.findById(req.body.company);
 
   company.sentConnections.push(req.body.company);
@@ -299,6 +329,10 @@ exports.acceptConnectionRequest = asyncHandler(async (req, res, next) => {
     );
   }
 
+  const connection = await Connection.findOne({ sender: req.body.company });
+  console.log(connection);
+  connection.status = "ACCEPTED";
+
   const otherCompany = await Company.findById(req.body.company);
 
   company.companyConnections.push(req.body.company);
@@ -307,6 +341,7 @@ exports.acceptConnectionRequest = asyncHandler(async (req, res, next) => {
   otherCompany.companyConnections.push(company._id);
   otherCompany.sentConnections.pull(company._id);
 
+  await connection.save();
   await company.save();
   await otherCompany.save();
 
@@ -329,11 +364,17 @@ exports.rejectConnectionRequest = asyncHandler(async (req, res, next) => {
     );
   }
 
+  const connection = await Connection.findOne({ sender: req.body.company });
+
+  connection.status = "REJECTED";
+
   const otherCompany = await Company.findById(req.body.company);
 
   company.pendingConnections.pull(req.body.company);
 
   otherCompany.sentConnections.pull(company._id);
+
+  await connection.save();
 
   await company.save();
   await otherCompany.save();

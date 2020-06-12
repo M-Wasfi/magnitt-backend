@@ -1,12 +1,12 @@
 const validator = require("../../helpers/validation");
 const jsonResponse = require("../../helpers/json_response");
 
-const addUserValidation = (req, res, next) => {
+const connectionRequestValidation = (req, res, next) => {
   const validationRule = {
-    userName: "required|string",
-    password: "required|string|min:8|confirmed",
-    email: "required|email",
+    company: "required|string",
   };
+
+  console.log(req.body);
 
   validator(req.body, validationRule, {}, (err, status) => {
     if (!status) {
@@ -17,4 +17,4 @@ const addUserValidation = (req, res, next) => {
   });
 };
 
-module.exports = addUserValidation;
+module.exports = connectionRequestValidation;
