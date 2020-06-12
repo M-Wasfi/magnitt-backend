@@ -19,6 +19,7 @@ const {
   acceptConnectionRequest,
   rejectConnectionRequest,
   addEmployee,
+  getCompanyConnections,
 } = require("../controllers/company_controllers");
 
 router
@@ -27,6 +28,8 @@ router
   .post(authorize, addCompanyValidation, addCompany);
 
 router.route("/my-company").get(authorize, getMyCompany);
+
+router.route("/my-connections").post(authorize, getCompanyConnections);
 
 router
   .route("/:id")

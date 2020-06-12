@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server",
     "server": "nodemon server",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --runInBand",
+    "test:watch": "jest --watch --runInBand"
   },
   "author": "Mohammed Wasfi",
   "license": "ISC",
@@ -28,6 +29,16 @@
     "validatorjs": "^3.18.1"
   },
   "devDependencies": {
-    "nodemon": "^2.0.4"
+    "@shelf/jest-mongodb": "^1.1.5",
+    "jest": "^26.0.1",
+    "nodemon": "^2.0.4",
+    "supertest": "^4.0.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "preset": "@shelf/jest-mongodb"
   }
 }

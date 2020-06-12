@@ -225,8 +225,6 @@ exports.addEmployee = asyncHandler(async (req, res, next) => {
   const employeeInCompany = company.employees.some(function (employee) {
     return employee.equals(req.body.employee);
   });
-  console.log("2");
-  console.log(employeeInCompany);
 
   if (employeeInCompany) {
     return jsonResponse(
@@ -239,9 +237,6 @@ exports.addEmployee = asyncHandler(async (req, res, next) => {
   }
 
   const employee = await User.findById(req.body.employee);
-
-  console.log("3");
-  console.log(employee);
 
   if (employee.company !== null) {
     return jsonResponse(
@@ -296,7 +291,7 @@ exports.sendConnectionRequest = asyncHandler(async (req, res, next) => {
     );
   }
 
-  await Connection.create({
+  const connection = await Connection.create({
     sender: company._id,
     receiver: req.body.company,
     status: "PENDING",
@@ -310,7 +305,13 @@ exports.sendConnectionRequest = asyncHandler(async (req, res, next) => {
   await company.save();
   await otherCompany.save();
 
-  jsonResponse(res, 200, true, "Connection request sent successfully", {});
+  jsonResponse(
+    res,
+    200,
+    true,
+    "Connection request sent successfully",
+    connection
+  );
 });
 
 exports.acceptConnectionRequest = asyncHandler(async (req, res, next) => {
@@ -330,7 +331,7 @@ exports.acceptConnectionRequest = asyncHandler(async (req, res, next) => {
   }
 
   const connection = await Connection.findOne({ sender: req.body.company });
-  console.log(connection);
+
   connection.status = "ACCEPTED";
 
   const otherCompany = await Company.findById(req.body.company);
@@ -345,7 +346,13 @@ exports.acceptConnectionRequest = asyncHandler(async (req, res, next) => {
   await company.save();
   await otherCompany.save();
 
-  jsonResponse(res, 200, true, "Connection request accepted successfully", {});
+  jsonResponse(
+    res,
+    200,
+    true,
+    "Connection request accepted successfully",
+    connection
+  );
 });
 
 exports.rejectConnectionRequest = asyncHandler(async (req, res, next) => {
@@ -379,5 +386,44 @@ exports.rejectConnectionRequest = asyncHandler(async (req, res, next) => {
   await company.save();
   await otherCompany.save();
 
-  jsonResponse(res, 200, true, "Connection request rejected successfully", {});
+  jsonResponse(
+    res,
+    200,
+    true,
+    "Connection request rejected successfully",
+    connection
+  );
+});
+
+// @route     GET /api/companies/my-connections
+// @desc      Get single company
+// @access    Private
+exports.getCompanyConnections = asyncHandler(async (req, res, next) => {
+  try {
+    const company = await Company.findOne({ owner: req.user.id });
+
+    const connections = await Connection.find(
+      { sender: company._id } || { receiver: company._id }
+    );
+
+    connections
+      ? jsonResponse(
+          res,
+          200,
+          true,
+          `Got company's connections successfully`,
+          connections
+        )
+      : jsonResponse(
+          res,
+          404,
+          false,
+          `Could not find company's connections`,
+          connections
+        );
+  } catch (error) {
+    jsonResponse(res, 400, false, `Failed to get company's connections`, {
+      error,
+    });
+  }
 });

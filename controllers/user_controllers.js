@@ -45,7 +45,7 @@ exports.getUser = asyncHandler(async (req, res, next) => {
       400,
       false,
       `Failed to get user by id: ${req.params.id}`,
-      error
+      { error }
     );
   }
 });
@@ -80,7 +80,7 @@ exports.getUserByEmail = asyncHandler(async (req, res, next) => {
       400,
       false,
       `Failed to get user by email: ${req.body.email}`,
-      error
+      { error }
     );
   }
 });
@@ -94,7 +94,7 @@ exports.addUser = asyncHandler(async (req, res, next) => {
 
     jsonResponse(res, 201, true, "User created successfully", user);
   } catch (error) {
-    jsonResponse(res, 400, false, "Failed to create user", error);
+    jsonResponse(res, 400, false, "Failed to create user", { error });
   }
 });
 
@@ -130,7 +130,7 @@ exports.registerUser = asyncHandler(async (req, res, next) => {
       company: null,
     });
 
-    tokenResponse(res, user, 201, true, "User registered successfully");
+    tokenResponse(res, user, 201, "User registered successfully");
   } catch (error) {
     jsonResponse(res, 400, false, "Failed to register user", { error });
   }
@@ -158,7 +158,7 @@ exports.loginUser = asyncHandler(async (req, res, next) => {
 
     tokenResponse(res, user, 200, "User logged in successfully");
   } catch (error) {
-    jsonResponse(res, 400, false, "Failed to login", error);
+    jsonResponse(res, 400, false, "Failed to login", { error });
   }
 });
 
@@ -183,7 +183,7 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
           user
         );
   } catch (error) {
-    jsonResponse(res, 400, false, "Failed to update user", error);
+    jsonResponse(res, 400, false, "Failed to update user", { error });
   }
 });
 
@@ -254,6 +254,6 @@ exports.deleteUser = asyncHandler(async (req, res, next) => {
 
     jsonResponse(res, 200, true, "User deleted successfully", {});
   } catch (error) {
-    jsonResponse(res, 400, false, "Failed to delete user", error);
+    jsonResponse(res, 400, false, "Failed to delete user", { error });
   }
 });
