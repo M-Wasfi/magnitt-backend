@@ -28,8 +28,8 @@ run: npm run test:watch // To run tests with watch flag
 
 ## Built With
 
-Node.js
-Express.js
+Node.js, 
+Express.js, 
 Mongoose - To connect with MongoDB
 
 ## Authors
