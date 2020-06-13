@@ -32,24 +32,24 @@ const CompanySchema = Schema({
       ref: "users",
     },
   ],
-  companyConnections: [
-    {
-      type: Schema.Types.ObjectID,
-      ref: "companies",
-    },
-  ],
-  sentConnections: [
-    {
-      type: Schema.Types.ObjectID,
-      ref: "companies",
-    },
-  ],
-  pendingConnections: [
-    {
-      type: Schema.Types.ObjectID,
-      ref: "companies",
-    },
-  ],
+  // companyConnections: [
+  //   {
+  //     type: Schema.Types.ObjectID,
+  //     ref: "companies",
+  //   },
+  // ],
+  // sentConnections: [
+  //   {
+  //     type: Schema.Types.ObjectID,
+  //     ref: "companies",
+  //   },
+  // ],
+  // pendingConnections: [
+  //   {
+  //     type: Schema.Types.ObjectID,
+  //     ref: "companies",
+  //   },
+  // ],
   creationDate: {
     type: Date,
     default: Date.now,

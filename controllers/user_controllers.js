@@ -193,6 +193,7 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
 exports.updateUserProfile = asyncHandler(async (req, res, next) => {
   const { userName, email } = req.body;
 
+  // check if name and email exists
   const currentUser = await User.findById(req.user.id);
   const userWithName = await User.findOne({ userName });
   const userWithEmail = await User.findOne({ email });
@@ -217,10 +218,7 @@ exports.updateUserProfile = asyncHandler(async (req, res, next) => {
   }
 
   try {
-    // currentUser.userName = userName;
-    // currentUser.email = email;
-    // currentUser.save();
-
+    //update user profile
     const user = await User.findByIdAndUpdate(req.user.id, req.body, {
       new: true,
       runValidators: true,

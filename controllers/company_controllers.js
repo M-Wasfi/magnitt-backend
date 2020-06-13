@@ -5,12 +5,12 @@ const jsonResponse = require("../helpers/json_response");
 
 const Company = require("../models/company");
 const User = require("../models/user");
-const Connection = require("../models/connection");
 
+///////////////////////////////////////////////////////////////////////////////
 //TODO review access
 // @route   GET api/companies
-// @desc    Get all company
-// @access  Private
+// @desc    Get all companies
+// @access  Public
 exports.getCompanies = asyncHandler(async (req, res, next) => {
   try {
     const companies = await Company.find();
@@ -21,14 +21,13 @@ exports.getCompanies = asyncHandler(async (req, res, next) => {
   }
 });
 
+///////////////////////////////////////////////////////////////////////////////
 // @route     GET /api/companies/:id
 // @desc      Get single company
-// @access    Private
+// @access    Public
 exports.getCompany = asyncHandler(async (req, res, next) => {
   try {
-    const company = await Company.findById(req.params.id)
-      .populate("employees")
-      .populate("companyConnections");
+    const company = await Company.findById(req.params.id).populate("employees");
 
     company
       ? jsonResponse(
@@ -56,16 +55,15 @@ exports.getCompany = asyncHandler(async (req, res, next) => {
   }
 });
 
+///////////////////////////////////////////////////////////////////////////////
 // @route     GET /api/companies/my-company
-// @desc      Get single company
+// @desc      Get logged in user company info
 // @access    Private
 exports.getMyCompany = asyncHandler(async (req, res, next) => {
   try {
+    // Get the owner company
     const ownCompany = await Company.findOne({ owner: req.user.id })
       .populate("employees")
-      .populate("companyConnections")
-      .populate("pendingConnections")
-      .populate("sentConnections")
       .exec();
 
     if (ownCompany !== null) {
@@ -78,6 +76,7 @@ exports.getMyCompany = asyncHandler(async (req, res, next) => {
       );
     }
 
+    // Get the employee company
     const user = await User.findById(req.user.id);
 
     if (user.company === null) {
@@ -100,12 +99,15 @@ exports.getMyCompany = asyncHandler(async (req, res, next) => {
   }
 });
 
+///////////////////////////////////////////////////////////////////////////////
 // @route     POST /api/companies/
 // @desc      Add a company
 // @access    Private
 exports.addCompany = asyncHandler(async (req, res, next) => {
   try {
     const company = await Company.create(req.body);
+
+    // add company to user profile
     await User.findByIdAndUpdate(
       req.user.id,
       { company: company._id },
@@ -116,6 +118,7 @@ exports.addCompany = asyncHandler(async (req, res, next) => {
       }
     );
 
+    // add user to company's employees list
     company.employees.push(req.user.id);
     await company.save();
 
@@ -125,17 +128,18 @@ exports.addCompany = asyncHandler(async (req, res, next) => {
   }
 });
 
-//review
+///////////////////////////////////////////////////////////////////////////////
 // @route     PUT /api/companies/:id
-// @desc      Update company
+// @desc      Update company profile
 // @access    Private
 exports.updateCompany = asyncHandler(async (req, res, next) => {
   try {
+    // check if the user is the owner of the company
     if (!(await Company.findOne({ owner: req.user.id, _id: req.params.id }))) {
       return next(
-        new jsonResponse(
+        jsonResponse(
           res,
-          400,
+          403,
           false,
           `You are not allowed to update company details`,
           {}
@@ -143,6 +147,7 @@ exports.updateCompany = asyncHandler(async (req, res, next) => {
       );
     }
 
+    // check if new company name exists
     const { companyName } = req.body;
 
     const currentUser = await User.findById(req.user.id);
@@ -168,6 +173,7 @@ exports.updateCompany = asyncHandler(async (req, res, next) => {
       }
     }
 
+    // update company
     const company = await Company.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
@@ -188,6 +194,7 @@ exports.updateCompany = asyncHandler(async (req, res, next) => {
   }
 });
 
+///////////////////////////////////////////////////////////////////////////////
 // @route     DELETE /api/companies/:id
 // @desc      Delete a company
 // @access    Private
@@ -205,11 +212,12 @@ exports.deleteCompany = asyncHandler(async (req, res, next) => {
   }
 });
 
+///////////////////////////////////////////////////////////////////////////////
 // @route     POST /api/companies/employee
-// @desc      Add an employee
+// @desc      Add an employee to the company
 // @access    Private
 exports.addEmployee = asyncHandler(async (req, res, next) => {
-  //Check ownership
+  //Check user ownership over the company
   const company = await Company.findOne({ owner: req.user.id });
 
   if (company === null) {
@@ -224,6 +232,20 @@ exports.addEmployee = asyncHandler(async (req, res, next) => {
     );
   }
 
+  // check if employee already has joined a company
+  const employee = await User.findById(req.body.employee);
+
+  if (employee.company !== null) {
+    return jsonResponse(
+      res,
+      400,
+      false,
+      `Employee has already joined a company`,
+      {}
+    );
+  }
+
+  //check if employee already joined the company
   const employeeInCompany = company.employees.some(function (employee) {
     return employee.equals(req.body.employee);
   });
@@ -238,18 +260,7 @@ exports.addEmployee = asyncHandler(async (req, res, next) => {
     );
   }
 
-  const employee = await User.findById(req.body.employee);
-
-  if (employee.company !== null) {
-    return jsonResponse(
-      res,
-      400,
-      false,
-      `Employee has already joined a company`,
-      {}
-    );
-  }
-
+  // add company to employee profile
   await User.findByIdAndUpdate(
     req.body.employee,
     { company: company._id },
@@ -260,174 +271,10 @@ exports.addEmployee = asyncHandler(async (req, res, next) => {
     }
   );
 
+  // add employee to company's employees list
   company.employees.push(mongoose.Types.ObjectId(req.body.employee));
 
   await company.save();
 
   jsonResponse(res, 200, true, "Employee added successfully", {});
-});
-
-exports.sendConnectionRequest = asyncHandler(async (req, res, next) => {
-  //Check ownership
-  const company = await Company.findOne({ owner: req.user.id });
-
-  if (company === null) {
-    return next(
-      jsonResponse(
-        res,
-        400,
-        false,
-        `You are not allowed to send connection requests`,
-        {}
-      )
-    );
-  }
-
-  const oldConnection = Connection.find({
-    sender: company._id,
-    receiver: req.bode.company,
-  });
-
-  if (oldConnection) {
-    return next(
-      jsonResponse(res, 400, false, `Request has already been sent`, {})
-    );
-  }
-
-  const connection = await Connection.create({
-    sender: company._id,
-    receiver: req.body.company,
-    status: "PENDING",
-  });
-
-  const otherCompany = await Company.findById(req.body.company);
-
-  otherCompany.pendingConnections.push(company._id);
-
-  await company.save();
-  await otherCompany.save();
-
-  jsonResponse(
-    res,
-    200,
-    true,
-    "Connection request sent successfully",
-    connection
-  );
-});
-
-exports.acceptConnectionRequest = asyncHandler(async (req, res, next) => {
-  //Check ownership
-  const company = await Company.findOne({ owner: req.user.id });
-
-  if (company === null) {
-    return next(
-      new jsonResponse(
-        res,
-        400,
-        false,
-        `You are not allowed to accept connection requests`,
-        {}
-      )
-    );
-  }
-
-  const connection = await Connection.findOne({ sender: req.body.company });
-
-  connection.status = "ACCEPTED";
-
-  const otherCompany = await Company.findById(req.body.company);
-
-  company.companyConnections.push(req.body.company);
-  company.pendingConnections.pull(req.body.company);
-
-  otherCompany.companyConnections.push(company._id);
-  otherCompany.sentConnections.pull(company._id);
-
-  await connection.save();
-  await company.save();
-  await otherCompany.save();
-
-  jsonResponse(
-    res,
-    200,
-    true,
-    "Connection request accepted successfully",
-    connection
-  );
-});
-
-exports.rejectConnectionRequest = asyncHandler(async (req, res, next) => {
-  //Check ownership
-  const company = await Company.findOne({ owner: req.user.id });
-
-  if (company === null) {
-    return next(
-      new jsonResponse(
-        res,
-        400,
-        false,
-        `You are not allowed to reject connection requests`,
-        {}
-      )
-    );
-  }
-
-  const connection = await Connection.findOne({ sender: req.body.company });
-
-  connection.status = "REJECTED";
-
-  const otherCompany = await Company.findById(req.body.company);
-
-  company.pendingConnections.pull(req.body.company);
-
-  otherCompany.sentConnections.pull(company._id);
-
-  await connection.save();
-
-  await company.save();
-  await otherCompany.save();
-
-  jsonResponse(
-    res,
-    200,
-    true,
-    "Connection request rejected successfully",
-    connection
-  );
-});
-
-// @route     GET /api/companies/my-connections
-// @desc      Get single company
-// @access    Private
-exports.getCompanyConnections = asyncHandler(async (req, res, next) => {
-  try {
-    const company = await Company.findOne({ owner: req.user.id });
-
-    const connections = await Connection.find({
-      $or: [{ sender: company._id }, { receiver: company._id }],
-    });
-
-    console.log(connections);
-
-    connections
-      ? jsonResponse(
-          res,
-          200,
-          true,
-          `Got company's connections successfully`,
-          connections
-        )
-      : jsonResponse(
-          res,
-          404,
-          false,
-          `Could not find company's connections`,
-          connections
-        );
-  } catch (error) {
-    jsonResponse(res, 400, false, `Failed to get company's connections`, {
-      error,
-    });
-  }
 });

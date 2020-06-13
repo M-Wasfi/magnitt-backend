@@ -3,7 +3,7 @@ const express = require("express");
 const { authorize } = require("../helpers/authorization");
 
 const addUserValidation = require("../validation/user/add_user_validation");
-const loginValidation = require("../validation/user/login_validation");
+const loginValidation = require("../validation/auth/login_validation");
 const searchUserValidation = require("../validation/user/search_user_validation");
 const updateUserValidation = require("../validation/user/update_user_validation");
 

@@ -1,7 +1,6 @@
 const app = require("../app");
 const supertest = require("supertest");
 const { setupDB } = require("../helpers/test_setup");
-const User = require("../models/user");
 
 const request = supertest(app);
 

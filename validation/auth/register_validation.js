@@ -1,12 +1,12 @@
 const validator = require("../../helpers/validation");
 const jsonResponse = require("../../helpers/json_response");
 
-const connectionRequestValidation = (req, res, next) => {
+const registerValidation = (req, res, next) => {
   const validationRule = {
-    company: "required|string",
+    userName: "required|string",
+    password: "required|string|min:8|confirmed",
+    email: "required|email",
   };
-
-  console.log(req.body);
 
   validator(req.body, validationRule, {}, (err, status) => {
     if (!status) {
@@ -17,4 +17,4 @@ const connectionRequestValidation = (req, res, next) => {
   });
 };
 
-module.exports = connectionRequestValidation;
+module.exports = registerValidation;

@@ -13,7 +13,7 @@ const ConnectionsSchema = Schema({
   },
   status: {
     type: String,
-    enum: ["PENDING", "ACCEPTED", "CONNECTED", "REJECTED"],
+    enum: ["PENDING", "CONNECTED", "REJECTED"],
     default: "PENDING",
   },
   creationDate: {
