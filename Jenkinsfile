@@ -9,6 +9,7 @@ pipeline {
         stage("build") {
             steps {
                 echo '=====Building app====='
+                sh 'npm install' 
             }
         }
         stage("test") {
