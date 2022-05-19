@@ -15,6 +15,7 @@ pipeline {
         stage("test") {
             steps {
                 echo '=====Testing app====='
+                sh 'npm run test' 
             }
         }
         stage("deploy") {
