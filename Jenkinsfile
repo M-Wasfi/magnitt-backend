@@ -1,38 +1,36 @@
 pipeline {
     agent any
-    options {
-        skipStagesAfterUnstable()
+    parameters {
+        choice(name: 'VERSION', choices: ['1.1.0', '1.2.0', '1.3.0'], description: '')
+        booleanParam(name: 'executeTests', defaultValue: true, description: '')
     }
     stages {
-         stage('Clone repository') { 
-            steps { 
-                script{
-                checkout scm
-                }
-            }
-        }
-
-        stage('Build') { 
-            steps { 
-                script{
-                 app = docker.build("underwater")
-                }
-            }
-        }
-        stage('Test'){
+        stage("init") {
             steps {
-                 echo 'Empty'
+                echo '=====Init====='
             }
         }
-        stage('Deploy') {
+        stage("build") {
             steps {
-                script{
-                        docker.withRegistry('205093322186.dkr.ecr.us-east-1.amazonaws.com/jenkins-pipe-test', 'ecr:us-east-1:aws-credentials') {
-                    app.push("${env.BUILD_NUMBER}")
-                    app.push("latest")
-                    }
+                echo '=====Building app====='
+                sh 'npm install' 
+                sh 'npm run build' 
+            }
+        }
+        stage("test") {
+            when {
+                expression {
+                    params.executeTests
                 }
             }
+            steps {
+                echo '=====Testing app====='
+            }
         }
-    }
+        stage("deploy") {
+            steps {
+                echo '=====Deploying app====='
+            }
+        }
+    }   
 }
