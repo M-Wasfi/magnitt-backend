@@ -7,12 +7,13 @@ pipeline {
         stage("init") {
             steps {
                 echo '=====Init====='
+                sh 'npm install' 
             }
         }
         stage("build") {
             steps {
                 echo '=====Building app====='
-                sh 'npm install' 
+                sh 'npm run build' 
             }
         }
         stage("test") {
