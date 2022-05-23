@@ -13,7 +13,6 @@ pipeline {
         stage("build") {
             steps {
                 echo '=====Building app====='
-                sh 'npm run build' 
             }
         }
         stage("test") {
